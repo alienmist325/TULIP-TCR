@@ -177,7 +177,9 @@ def main():
     target_peptidesFinal = pd.read_csv(test_path)["peptide"].unique()
 
     for target_peptide in target_peptidesFinal:
-        results = pd.DataFrame(columns=["CDR3a", "CDR3b", "peptide", "score", "rank", "binder"])
+        results = pd.DataFrame(
+            columns=["CDR3a", "CDR3b", "peptide", "score", "rank", "binder"]
+        )
         datasetPetideSpecific = TCRDataset(
             test_path, tokenizer, device, target_peptide=target_peptide, mhctok=mhctok
         )
@@ -205,9 +207,14 @@ def main():
         results.to_csv(output_path, mode="a", header=False)
 
         compute_auc = True
-         
+
         if compute_auc:
-            dl = torch.utils.data.DataLoader(dataset=datasetPetideSpecific, batch_size=1, shuffle=False, collate_fn=datasetPetideSpecific.all2allmhc_collate_function)
+            dl = torch.utils.data.DataLoader(
+                dataset=datasetPetideSpecific,
+                batch_size=1,
+                shuffle=False,
+                collate_fn=datasetPetideSpecific.all2allmhc_collate_function,
+            )
             # print(unsupervised_auc(model,dl, tokenizer.pad_token_id))
             auce = roc_auc_score(datasetPetideSpecific.binder, ranks)
             aucs = pd.DataFrame(columns=["peptide", "auc"])
@@ -219,7 +226,7 @@ def main():
                 with open(output_path, "w") as file:
                     file.write("index,peptide,auc\n")
 
-            results.to_csv(output_path, mode="a", header=False)
+            aucs.to_csv(output_path, mode="a", header=False)
             # print(auce)
 
 
