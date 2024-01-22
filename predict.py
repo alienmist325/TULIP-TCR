@@ -177,7 +177,7 @@ def main():
     target_peptidesFinal = pd.read_csv(test_path)["peptide"].unique()
 
     for target_peptide in target_peptidesFinal:
-        results = pd.DataFrame(columns=["CDR3a", "CDR3b", "peptide", "score", "rank"])
+        results = pd.DataFrame(columns=["CDR3a", "CDR3b", "peptide", "score", "rank", "binder"])
         datasetPetideSpecific = TCRDataset(
             test_path, tokenizer, device, target_peptide=target_peptide, mhctok=mhctok
         )
@@ -193,13 +193,14 @@ def main():
         results["peptide"] = target_peptide
         results["rank"] = ranks
         results["score"] = scores
+        results["binder"] = datasetPetideSpecific.binder
         # results.to_csv(args.output + target_peptide + ".csv")
 
         current_datetime = starttime.strftime("%Y%m%d-%H%M%S")
         output_path = args.output + "/output-" + current_datetime + ".csv"
         if not os.path.isfile(output_path):
             with open(output_path, "w") as file:
-                file.write("receptor_number,CDR3a,CDR3b,peptide,score,rank")
+                file.write("receptor_number,CDR3a,CDR3b,peptide,score,rank, binder\n")
 
         results.to_csv(output_path, mode="a", header=False)
 
@@ -209,7 +210,17 @@ def main():
             dl = torch.utils.data.DataLoader(dataset=datasetPetideSpecific, batch_size=1, shuffle=False, collate_fn=datasetPetideSpecific.all2allmhc_collate_function)
             # print(unsupervised_auc(model,dl, tokenizer.pad_token_id))
             auce = roc_auc_score(datasetPetideSpecific.binder, ranks)
-            print(auce)
+            aucs = pd.DataFrame(columns=["peptide", "auc"])
+            aucs["peptide"] = target_peptide
+            aucs["auc"] = auce
+
+            output_path = args.output + "/output_auc-" + current_datetime + ".csv"
+            if not os.path.isfile(output_path):
+                with open(output_path, "w") as file:
+                    file.write("index,peptide,auc\n")
+
+            results.to_csv(output_path, mode="a", header=False)
+            # print(auce)
 
 
 if __name__ == "__main__":
