@@ -218,8 +218,8 @@ def main():
             # print(unsupervised_auc(model,dl, tokenizer.pad_token_id))
             auce = roc_auc_score(datasetPetideSpecific.binder, ranks)
             aucs = pd.DataFrame(columns=["peptide", "auc"])
-            aucs["peptide"] = target_peptide
-            aucs["auc"] = auce
+            aucs["peptide"] = [target_peptide]
+            aucs["auc"] = [auce]
 
             output_path = args.output + "/output_auc-" + current_datetime + ".csv"
             if not os.path.isfile(output_path):
