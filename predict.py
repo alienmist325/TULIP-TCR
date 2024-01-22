@@ -203,6 +203,14 @@ def main():
 
         results.to_csv(output_path, mode="a", header=False)
 
+        compute_auc = True
+         
+        if compute_auc:
+            dl = torch.utils.data.DataLoader(dataset=datasetPetideSpecific, batch_size=1, shuffle=False, collate_fn=datasetPetideSpecific.all2allmhc_collate_function)
+            # print(unsupervised_auc(model,dl, tokenizer.pad_token_id))
+            auce = roc_auc_score(datasetPetideSpecific.binder, ranks)
+            print(auce)
+
 
 if __name__ == "__main__":
     main()
