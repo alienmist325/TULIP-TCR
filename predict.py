@@ -9,8 +9,6 @@ import torch.nn.functional as F
 from transformers import BertModel, BertConfig
 from sklearn.metrics import roc_auc_score
 
-import torch
-
 from transformers.models.encoder_decoder.configuration_encoder_decoder import (
     EncoderDecoderConfig,
 )
