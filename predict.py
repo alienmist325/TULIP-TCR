@@ -7,7 +7,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from transformers import BertModel, BertConfig
-from sklearn.metrics import roc_auc_score
+from sklearn.metrics import roc_auc_score, PrecisionRecallDisplay
 
 from transformers.models.encoder_decoder.configuration_encoder_decoder import (
     EncoderDecoderConfig,
@@ -160,6 +160,15 @@ def main():
         decoderE=decoderE,
     )
 
+    # I've recreated the model without the other decoders
+
+    model = Tulip(
+        encoderA=encoderA,
+        encoderE=encoderE,
+        decoderA=decoderA,
+        decoderE=decoderE
+    )
+
     def count_parameters(mdl):
         return sum(p.numel() for p in mdl.parameters() if p.requires_grad)
 
@@ -196,6 +205,8 @@ def main():
         results["binder"] = datasetPetideSpecific.binder
         # results.to_csv(args.output + target_peptide + ".csv")
 
+        number = len(ranks)
+
         current_datetime = starttime.strftime("%Y%m%d-%H%M%S")
         output_path = args.output + "/output-" + current_datetime + ".csv"
         if not os.path.isfile(output_path):
@@ -225,6 +236,11 @@ def main():
                     file.write("index,peptide,auc\n")
 
             aucs.to_csv(output_path, mode="a", header=False)
+
+            import matplotlib.pyplot as plt
+            display = PrecisionRecallDisplay.from_predictions(datasetPetideSpecific.binder, ranks, name=f"LinearSVC-{target_peptide}-{number}", plot_chance_level=True)
+            prd_output = args.output + f"/graphs/prd-{number}-{target_peptide}.png"
+            plt.savefig(prd_output)
             # print(auce)
 
 
