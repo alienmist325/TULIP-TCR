@@ -162,12 +162,14 @@ def main():
 
     # I've recreated the model without the other decoders
 
+    """
     model = Tulip(
         encoderA=encoderA,
         encoderE=encoderE,
         decoderA=decoderA,
         decoderE=decoderE
     )
+    """
 
     def count_parameters(mdl):
         return sum(p.numel() for p in mdl.parameters() if p.requires_grad)
@@ -182,6 +184,11 @@ def main():
         print("loaded")
     model.to(device)
     target_peptidesFinal = pd.read_csv(test_path)["peptide"].unique()
+
+    prd_choice = input("Would you like to print all the graphs?")
+
+    if prd_choice == "y":
+        plot_prd = True
 
     for target_peptide in target_peptidesFinal:
         results = pd.DataFrame(
@@ -237,8 +244,15 @@ def main():
 
             aucs.to_csv(output_path, mode="a", header=False)
 
+        if plot_prd:
             import matplotlib.pyplot as plt
-            display = PrecisionRecallDisplay.from_predictions(datasetPetideSpecific.binder, ranks, name=f"LinearSVC-{target_peptide}-{number}", plot_chance_level=True)
+
+            display = PrecisionRecallDisplay.from_predictions(
+                datasetPetideSpecific.binder,
+                ranks,
+                name=f"LinearSVC-{target_peptide}-{number}",
+                plot_chance_level=True,
+            )
             prd_output = args.output + f"/graphs/prd-{number}-{target_peptide}.png"
             plt.savefig(prd_output)
             # print(auce)
