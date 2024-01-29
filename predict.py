@@ -215,7 +215,8 @@ def main():
         number = len(ranks)
 
         current_datetime = starttime.strftime("%Y%m%d-%H%M%S")
-        output_path = args.output + "/output-" + current_datetime + ".csv"
+        output_path = args.output +
+        "/output-" + current_datetime + ".csv"
         if not os.path.isfile(output_path):
             with open(output_path, "w") as file:
                 file.write("receptor_number,CDR3a,CDR3b,peptide,score,rank, binder\n")
