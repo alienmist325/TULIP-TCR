@@ -13,7 +13,7 @@ from transformers.models.encoder_decoder.configuration_encoder_decoder import (
     EncoderDecoderConfig,
 )
 from src.multiTrans import (
-    ED_BertForSequenceClassification,
+    TulipPetal,
     TCRDataset,
     BertLastPooler,
     unsupervised_auc,
@@ -31,6 +31,16 @@ from datetime import datetime
 torch.manual_seed(0)
 
 
+def get_input_identifier(path: str):
+    """
+    Asssumes path = "{arbitrary prefix}_{identifier}.csv"
+    """
+    path = path[0:-4]
+    parts = path.split("_")
+    del parts[0]
+    return "_".join(parts)
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -43,12 +53,13 @@ def main():
     )
     parser.add_argument(
         "--modelconfig",
+        default="configs/shallow.config.json",
         type=str,
         help="path to json including the config of the model",
     )
     parser.add_argument(
         "--load",
-        default=None,
+        default="model_weights/pytorch_model.bin",
         type=str,
         help="path to the model pretrained to load",
     )
@@ -109,11 +120,13 @@ def main():
     )
 
     mhctok = AutoTokenizer.from_pretrained("mhctok/")
-
     vocabsize = len(tokenizer._tokenizer.get_vocab())
     mhcvocabsize = len(mhctok._tokenizer.get_vocab())
+    print(mhcvocabsize)
     print("Loading models ..")
-    max_length = 114
+    # vocabsize = encparams["vocab_size"]
+
+    max_length = 50
     encoder_config = BertConfig(
         vocab_size=vocabsize,
         max_position_embeddings=max_length,  # this shuold be some large value
@@ -130,27 +143,30 @@ def main():
     encoderB = BertModel(config=encoder_config)
     encoderE = BertModel(config=encoder_config)
 
+    max_length = 100
     max_length = 50
     decoder_config = BertConfig(
         vocab_size=vocabsize,
-        max_position_embeddings=max_length,
+        max_position_embeddings=max_length,  # this shuold be some large value
         num_attention_heads=modelconfig["num_attn_heads"],
         num_hidden_layers=modelconfig["num_hidden_layers"],
         hidden_size=modelconfig["hidden_size"],
         type_vocab_size=1,
         is_decoder=True,
         pad_token_id=tokenizer.pad_token_id,
-    )
+    )  # Very Important
 
     decoder_config.add_cross_attention = True
 
-    decoderA = ED_BertForSequenceClassification(config=decoder_config)
+    decoderA = TulipPetal(config=decoder_config)  # BertForMaskedLM
     decoderA.pooler = BertLastPooler(config=decoder_config)
-    decoderB = ED_BertForSequenceClassification(config=decoder_config)
+    decoderB = TulipPetal(config=decoder_config)  # BertForMaskedLM
     decoderB.pooler = BertLastPooler(config=decoder_config)
-    decoderE = ED_BertForSequenceClassification(config=decoder_config)
+    decoderE = TulipPetal(config=decoder_config)  # BertForMaskedLM
     decoderE.pooler = BertLastPooler(config=decoder_config)
+
     # Define encoder decoder model
+
     model = Tulip(
         encoderA=encoderA,
         encoderB=encoderB,
@@ -159,29 +175,14 @@ def main():
         decoderB=decoderB,
         decoderE=decoderE,
     )
+    if torch.cuda.is_available():
+        checkpoint = torch.load(args.load)
+        model.load_state_dict(checkpoint)
 
-    # I've recreated the model without the other decoders
+    else:
+        checkpoint = torch.load(args.load, map_location=torch.device("cpu"))
+        model.load_state_dict(checkpoint)
 
-    """
-    model = Tulip(
-        encoderA=encoderA,
-        encoderE=encoderE,
-        decoderA=decoderA,
-        decoderE=decoderE
-    )
-    """
-
-    def count_parameters(mdl):
-        return sum(p.numel() for p in mdl.parameters() if p.requires_grad)
-
-    for p in model.parameters():
-        if p.dim() > 1:
-            nn.init.xavier_normal_(p)
-
-    if args.load:
-        checkpoint = torch.load(args.load + "/pytorch_model.bin")
-        model.load_state_dict(checkpoint, strict=False)
-        print("loaded")
     model.to(device)
     target_peptidesFinal = pd.read_csv(test_path)["peptide"].unique()
 
@@ -191,6 +192,13 @@ def main():
         plot_prd = True
     else:
         plot_prd = False
+
+    auc_choice = input("Would you like to compute AUCs?")
+
+    if auc_choice == "y":
+        compute_auc = True
+    else:
+        compute_auc = False
 
     for target_peptide in target_peptidesFinal:
         results = pd.DataFrame(
@@ -217,14 +225,21 @@ def main():
         number = len(ranks)
 
         current_datetime = starttime.strftime("%Y%m%d-%H%M%S")
-        output_path = args.output + "/output-" + current_datetime + ".csv"
+        input_identifier = get_input_identifier(test_path)
+
+        output_path = (
+            args.output
+            + "/output_"
+            + input_identifier
+            + "-"
+            + current_datetime
+            + ".csv"
+        )
         if not os.path.isfile(output_path):
             with open(output_path, "w") as file:
                 file.write("receptor_number,CDR3a,CDR3b,peptide,score,rank, binder\n")
 
         results.to_csv(output_path, mode="a", header=False)
-
-        compute_auc = True
 
         if compute_auc:
             dl = torch.utils.data.DataLoader(
@@ -239,7 +254,14 @@ def main():
             aucs["peptide"] = [target_peptide]
             aucs["auc"] = [auce]
 
-            output_path = args.output + "/output_auc-" + current_datetime + ".csv"
+            output_path = (
+                args.output
+                + "/output_"
+                + input_identifier
+                + "_auc-"
+                + current_datetime
+                + ".csv"
+            )
             if not os.path.isfile(output_path):
                 with open(output_path, "w") as file:
                     file.write("index,peptide,auc\n")
