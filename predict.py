@@ -31,6 +31,16 @@ from datetime import datetime
 torch.manual_seed(0)
 
 
+def get_input_identifier(path: str):
+    """
+    Asssumes path = "{arbitrary prefix}_{identifier}.csv"
+    """
+    path = path[0:-4]
+    parts = path.split("_")
+    del parts[0]
+    return "_".join(parts)
+
+
 def main():
     parser = argparse.ArgumentParser()
 
@@ -183,6 +193,13 @@ def main():
     else:
         plot_prd = False
 
+    auc_choice = input("Would you like to compute AUCs?")
+
+    if auc_choice == "y":
+        compute_auc = True
+    else:
+        compute_auc = False
+
     for target_peptide in target_peptidesFinal:
         results = pd.DataFrame(
             columns=["CDR3a", "CDR3b", "peptide", "score", "rank", "binder"]
@@ -208,14 +225,21 @@ def main():
         number = len(ranks)
 
         current_datetime = starttime.strftime("%Y%m%d-%H%M%S")
-        output_path = args.output + "/output-" + current_datetime + ".csv"
+        input_identifier = get_input_identifier(test_path)
+
+        output_path = (
+            args.output
+            + "/output_"
+            + input_identifier
+            + "-"
+            + current_datetime
+            + ".csv"
+        )
         if not os.path.isfile(output_path):
             with open(output_path, "w") as file:
                 file.write("receptor_number,CDR3a,CDR3b,peptide,score,rank, binder\n")
 
         results.to_csv(output_path, mode="a", header=False)
-
-        compute_auc = True
 
         if compute_auc:
             dl = torch.utils.data.DataLoader(
@@ -230,7 +254,14 @@ def main():
             aucs["peptide"] = [target_peptide]
             aucs["auc"] = [auce]
 
-            output_path = args.output + "/output_auc-" + current_datetime + ".csv"
+            output_path = (
+                args.output
+                + "/output_"
+                + input_identifier
+                + "_auc-"
+                + current_datetime
+                + ".csv"
+            )
             if not os.path.isfile(output_path):
                 with open(output_path, "w") as file:
                     file.write("index,peptide,auc\n")
