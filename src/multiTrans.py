@@ -433,6 +433,7 @@ class TCRDataset(data.Dataset):
 ### MODELING
 
 
+@dataclass
 class ClassifCausalLMOutputWithCrossAttentions(ModelOutput):
     lm_loss: Optional[torch.FloatTensor] = None
     lossCLS: Optional[torch.FloatTensor] = None
@@ -617,6 +618,10 @@ class TulipPetal(BertPreTrainedModel):
         }
 
 
+import typing
+
+
+@dataclass
 class ED_LMOutput(ModelOutput):
     clf_loss: Optional[torch.FloatTensor] = None
     clf_logits: Optional[torch.FloatTensor] = None
@@ -1231,7 +1236,7 @@ class Tulip(PreTrainedModel):
 
         else:
             return ED_LMOutput(
-                loss=lossCLS,
+                clf_loss=lossCLS,
                 clf_logits=logits,
                 encoder_outputsA=encoder_outputsA,
                 decoder_outputsA=decoder_outputsA,
