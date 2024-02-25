@@ -21,5 +21,7 @@ Name | Description | Output
 2.1 | Shuffled original data
 2.2.1 | All the positives extracted
 2.2.2 | All the positives, with CDR3a shuffled
-3.1 | Putting in "\<MIS\>" as the CDR3a
+3.1 | Putting in "\<MIS\>" as the CDR3b
 3.2 | Replacting "\<MIS\>" with something arbitrary almost everywhere: "t"
+3.3 | Full "\<MIS\>" in 2 columns (CDR3b and MHC)
+3.4 | Replace 3.3's "\<MIS\>" with "t"

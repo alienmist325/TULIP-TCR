@@ -28,6 +28,27 @@ def get_overlayed_distributions(
     return plt
 
 
+def get_scatter_distributions_comparison(
+    sources: list[str],
+    shared_pre_dir="../output/",
+    property="score",
+):
+    """
+    By default handles two different sources. Plot an overlayed graph of both.
+
+    sources : A list of filenames
+    shared_pre_dir : The relative path that all the sources share
+    """
+    scatter_pair = []
+    for source in sources:
+        output = pd.read_csv(shared_pre_dir + source)
+        scatter_pair.append(get_scores(output, property))
+
+    plt.scatter(*scatter_pair, alpha=0.4)
+
+    return plt
+
+
 def get_unique_output(input_id, folder="../output", property="score"):
     """
     Assuming you only have one input with a certain id, get the output, from the output folder
