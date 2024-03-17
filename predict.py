@@ -23,7 +23,7 @@ from src.multiTrans import (
     Tulip,
     get_logscore,
     get_mi,
-    get_auc_mi
+    get_auc_mi,
 )
 
 import argparse
@@ -202,8 +202,7 @@ def main():
     else:
         compute_auc = False
 
-
-    mi_choice = input("Would you like to print all the graphs?")
+    mi_choice = input("Would you like to compute the mi?")
 
     if mi_choice == "y":
         compute_mi = True
@@ -224,7 +223,8 @@ def main():
             )
         )
 
-        
+        header = "receptor_number,CDR3a,CDR3b,peptide,score,rank,binder\n"
+
         ranks = np.argsort(np.argsort(scores))
         results["CDR3a"] = datasetPetideSpecific.alpha
         results["CDR3b"] = datasetPetideSpecific.beta
@@ -234,11 +234,17 @@ def main():
         results["binder"] = datasetPetideSpecific.binder
 
         if compute_mi:
-            mi_scores = np.array(get_mi(model, datasetPetideSpecific))
-            mi_auc_scores =  np.array(get_auc_mi(model, datasetPetideSpecific))
-            results["mi_scores"] = mi_scores
-            results["mi_auc_scores"] = mi_auc_scores
-        
+            mi_scores_a, mi_scores_b = np.array(get_mi(model, datasetPetideSpecific))
+            mi_auc_scores_a, mi_auc_scores_b = np.array(
+                get_auc_mi(model, datasetPetideSpecific)
+            )
+            print(mi_auc_scores_a)
+            print(mi_auc_scores_b)
+            results["mi_scores_a"] = mi_scores_a
+            results["mi_scores_b"] = mi_scores_b
+
+            header = "receptor_number,CDR3a,CDR3b,peptide,score,rank,binder,mi_scores_a,mi_scores_b\n"
+
         # results.to_csv(args.output + target_peptide + ".csv")
 
         number = len(ranks)
@@ -256,7 +262,7 @@ def main():
         )
         if not os.path.isfile(output_path):
             with open(output_path, "w") as file:
-                file.write("receptor_number,CDR3a,CDR3b,peptide,score,rank, binder\n")
+                file.write(header)
 
         results.to_csv(output_path, mode="a", header=False)
 
@@ -286,7 +292,7 @@ def main():
                     file.write("index,peptide,auc\n")
 
             aucs.to_csv(output_path, mode="a", header=False)
-        
+
         if plot_prd:
             import matplotlib.pyplot as plt
 
