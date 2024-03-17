@@ -22,6 +22,8 @@ from src.multiTrans import (
     MyMasking,
     Tulip,
     get_logscore,
+    get_mi,
+    get_auc_mi
 )
 
 import argparse
@@ -200,6 +202,14 @@ def main():
     else:
         compute_auc = False
 
+
+    mi_choice = input("Would you like to print all the graphs?")
+
+    if mi_choice == "y":
+        compute_mi = True
+    else:
+        compute_mi = False
+
     for target_peptide in target_peptidesFinal:
         results = pd.DataFrame(
             columns=["CDR3a", "CDR3b", "peptide", "score", "rank", "binder"]
@@ -213,6 +223,8 @@ def main():
                 datasetPetideSpecific, model, ignore_index=tokenizer.pad_token_id
             )
         )
+
+        
         ranks = np.argsort(np.argsort(scores))
         results["CDR3a"] = datasetPetideSpecific.alpha
         results["CDR3b"] = datasetPetideSpecific.beta
@@ -220,6 +232,13 @@ def main():
         results["rank"] = ranks
         results["score"] = scores
         results["binder"] = datasetPetideSpecific.binder
+
+        if compute_mi:
+            mi_scores = np.array(get_mi(model, datasetPetideSpecific))
+            mi_auc_scores =  np.array(get_auc_mi(model, datasetPetideSpecific))
+            results["mi_scores"] = mi_scores
+            results["mi_auc_scores"] = mi_auc_scores
+        
         # results.to_csv(args.output + target_peptide + ".csv")
 
         number = len(ranks)
@@ -267,7 +286,7 @@ def main():
                     file.write("index,peptide,auc\n")
 
             aucs.to_csv(output_path, mode="a", header=False)
-
+        
         if plot_prd:
             import matplotlib.pyplot as plt
 
