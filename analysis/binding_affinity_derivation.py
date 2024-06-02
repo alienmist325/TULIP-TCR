@@ -3,7 +3,7 @@ import numpy as np
 
 def fit_params(kplus, kminus, pplus, pminus):
     """
-    Returns the correct eta_tilde and eta for our model construction
+    Returns the correct eta_tilde and eta for our model construction. This assume kplus is associated with kminus and vice versa.
     """
 
     eta = -(np.log(kplus) - np.log(kminus)) / (np.log(pplus) - np.log(pminus))
@@ -36,7 +36,8 @@ def fit_params_and_get_pbind_from_tulip_probs(tulip_probs, kplus, kminus, T_conc
     """
     Get pbind directly in one fell swoop (assuming the points to fit, pplus and pminus are just the max and min of your input probabilities).
     """
-    pplus = max(tulip_probs)
-    pminus = min(tulip_probs)
+    # Note the minimum prob gets mapped to the maximum binding affinity and vice versa (they're inversely proportional!)
+    pplus = min(tulip_probs)
+    pminus = max(tulip_probs)
     eta, eta_tilde = fit_params(kplus, kminus, pplus, pminus)
     return get_pbind_from_tulip_probs(tulip_probs, eta, eta_tilde, T_conc)
