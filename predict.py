@@ -296,14 +296,24 @@ def main():
         if plot_prd:
             import matplotlib.pyplot as plt
 
+            plt.rcParams["figure.figsize"] = (10, 8)
+            plt.rcParams["font.size"] = 25
+            plt.rcParams["lines.linewidth"] = 4
+            plt.rcParams["xtick.labelbottom"] = True
+
+            name = f"{target_peptide}-{number}"
             display = PrecisionRecallDisplay.from_predictions(
                 datasetPetideSpecific.binder,
                 ranks,
-                name=f"LinearSVC-{target_peptide}-{number}",
+                name=None,
                 plot_chance_level=True,
             )
             prd_output = args.output + f"/graphs/prd-{number}-{target_peptide}.png"
-            plt.savefig(prd_output)
+
+            plt.xlabel("Recall", labelpad=20)
+            plt.ylabel("Precision", labelpad=20)
+            plt.title(f"{target_peptide} against {number} TCRs")
+            plt.savefig(prd_output, bbox_inches="tight")
             # print(auce)
 
 
