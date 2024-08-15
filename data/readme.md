@@ -27,3 +27,4 @@ Name | Description | Output
 3.4 | Replace 3.3's "\<MIS\>" with "t"
 4 | Preparing to use the real data, so we have removed the binding column (this shouldn't be used). This doesn't work; binding column is needed
 4.1 | Does the binding column have an effect on the output? Ran the test with all 1's and this was identical to a mix, so we conclude (thankfully) no; we can just set binding to 1
+5 | The final, real data
