@@ -1,0 +1,6 @@
+add_raw_data/
+*.pyc
+data/input_6.csv
+output/output_6-20240819-181212.csv
+analysis/add_create_TULIP_input_and_sim_input.ipynb
+analysis/add_matrix.txt
