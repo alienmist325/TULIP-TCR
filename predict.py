@@ -195,14 +195,18 @@ def main():
     else:
         plot_prd = False
 
-    auc_choice = input("Would you like to compute AUCs?")
+    auc_choice = input(
+        "Would you like to compute AUCs? (only if your data has a correct indicator of binding in the binder column)"
+    )
 
     if auc_choice == "y":
         compute_auc = True
     else:
         compute_auc = False
 
-    mi_choice = input("Would you like to compute the mi?")
+    mi_choice = input(
+        "Would you like to compute the mi? (only if your data has a correct indicator of binding in the binder column)"
+    )
 
     if mi_choice == "y":
         compute_mi = True
